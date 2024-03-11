@@ -163,7 +163,7 @@ def retrieve_timesteps(
     return timesteps, num_inference_steps
 
 
-class AnimateDiffVideoToVideoPipeline(DiffusionPipeline, TextualInversionLoaderMixin, IPAdapterMixin, LoraLoaderMixin):
+class AnimateDiffVideoToVideoPipeline(DiffusionPipeline, TextualInversionLoaderMixin, IPAdapterMixin, LoraLoaderMixin, FromSingleFileMixin):
     r"""
     Pipeline for video-to-video generation.
 
@@ -175,6 +175,7 @@ class AnimateDiffVideoToVideoPipeline(DiffusionPipeline, TextualInversionLoaderM
         - [`~loaders.LoraLoaderMixin.load_lora_weights`] for loading LoRA weights
         - [`~loaders.LoraLoaderMixin.save_lora_weights`] for saving LoRA weights
         - [`~loaders.IPAdapterMixin.load_ip_adapter`] for loading IP Adapters
+        - [`~loaders.FromSingleFileMixin.from_single_file`] for loading `.ckpt` files
 
     Args:
         vae ([`AutoencoderKL`]):
@@ -215,7 +216,13 @@ class AnimateDiffVideoToVideoPipeline(DiffusionPipeline, TextualInversionLoaderM
         image_encoder: CLIPVisionModelWithProjection = None,
     ):
         super().__init__()
-        unet = UNetMotionModel.from_unet2d(unet, motion_adapter)
+        print('unet1', unet.dtype, unet.__class__.__name__)
+        if(motion_adapter):
+            unet = UNetMotionModel.from_unet2d(unet, motion_adapter)
+            print('unet+motion_adapter', unet.dtype, unet.__class__.__name__)
+        else:
+            print('unet2', unet.dtype, unet.__class__.__name__)
+
 
         self.register_modules(
             vae=vae,
