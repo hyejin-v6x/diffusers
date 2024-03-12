@@ -66,7 +66,7 @@ def get_motion_module(
 class VanillaTemporalModule(nn.Module):
     def __init__(
         self,
-        in_channels, #
+        in_channels, 
         num_attention_heads                = 8, # temporal_num_attention_heads
         num_transformer_block              = 2,
         attention_block_types              =( "Temporal_Self", "Temporal_Self" ),
@@ -92,9 +92,19 @@ class VanillaTemporalModule(nn.Module):
         if zero_initialize:
             self.temporal_transformer.proj_out = zero_module(self.temporal_transformer.proj_out)
 
-    def forward(self, input_tensor, temb, encoder_hidden_states, attention_mask=None, anchor_frame_idx=None):
-        hidden_states = input_tensor
-        hidden_states = self.temporal_transformer(hidden_states, encoder_hidden_states, attention_mask)
+    def forward(
+        self, 
+        hidden_states, 
+        num_frames, 
+        encoder_hidden_states=None, 
+        attention_mask=None, 
+        timestep: Optional[torch.LongTensor] = None, 
+        class_labels: torch.LongTensor = None, 
+        cross_attention_kwargs: Optional[dict] = None, 
+        return_dict: bool = True,
+    ):
+        # hidden_states = input_tensor
+        hidden_states = self.temporal_transformer(hidden_states, num_frames, encoder_hidden_states, attention_mask, timestep, class_labels, cross_attention_kwargs, return_dict)
 
         output = hidden_states
         return output
@@ -149,31 +159,6 @@ class TemporalTransformer3DModel(nn.Module):
         )
         self.proj_out = nn.Linear(inner_dim, in_channels)    
     
-    # def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None):
-    #     assert hidden_states.dim() == 5, f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
-    #     video_length = hidden_states.shape[2]
-    #     hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w")
-
-    #     batch, channel, height, weight = hidden_states.shape
-    #     residual = hidden_states
-
-    #     hidden_states = self.norm(hidden_states)
-    #     inner_dim = hidden_states.shape[1]
-    #     hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * weight, inner_dim)
-    #     hidden_states = self.proj_in(hidden_states)
-
-    #     # Transformer Blocks
-    #     for block in self.transformer_blocks:
-    #         hidden_states = block(hidden_states, encoder_hidden_states=encoder_hidden_states, video_length=video_length)
-        
-    #     # output
-    #     hidden_states = self.proj_out(hidden_states)
-    #     hidden_states = hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
-
-    #     output = hidden_states + residual
-    #     output = rearrange(output, "(b f) c h w -> b c f h w", f=video_length)
-        
-    #     return output
     def forward(
             self, 
             hidden_states, 
@@ -186,46 +171,27 @@ class TemporalTransformer3DModel(nn.Module):
             return_dict: bool = True,
         ):
         # 1. Input
-        batch_frames, channel, height, width = hidden_states.shape
-        batch_size = batch_frames // num_frames
+        batch, channel, height, weight = hidden_states.shape
+        # batch = batch_frames // num_frames
+        video_length = num_frames
 
         residual = hidden_states
 
-        hidden_states = hidden_states[None, :].reshape(batch_size, num_frames, channel, height, width)
-        hidden_states = hidden_states.permute(0, 2, 1, 3, 4)
-
         hidden_states = self.norm(hidden_states)
-        hidden_states = hidden_states.permute(0, 3, 4, 2, 1).reshape(batch_size * height * width, num_frames, channel)
-
+        inner_dim = hidden_states.shape[1]
+        hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * weight, inner_dim)
         hidden_states = self.proj_in(hidden_states)
 
-        # 2. Blocks
+        # Transformer Blocks
         for block in self.transformer_blocks:
-            hidden_states = block(
-                hidden_states,
-                encoder_hidden_states=encoder_hidden_states,
-                timestep=timestep,
-                cross_attention_kwargs=cross_attention_kwargs,
-                class_labels=class_labels,
-            )
-
-        # 3. Output
+            hidden_states = block(hidden_states, encoder_hidden_states=encoder_hidden_states, video_length=video_length)
+        
+        # output
         hidden_states = self.proj_out(hidden_states)
-        hidden_states = (
-            hidden_states[None, None, :]
-            .reshape(batch_size, height, width, num_frames, channel)
-            .permute(0, 3, 4, 1, 2)
-            .contiguous()
-        )
-        hidden_states = hidden_states.reshape(batch_frames, channel, height, width)
+        hidden_states = hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
 
         output = hidden_states + residual
-
-        if not return_dict:
-            return (output,)
-
         return TemporalTransformer3DModelOutput(sample=output)
-
 
 class TemporalTransformerBlock(nn.Module):
     def __init__(
@@ -274,8 +240,7 @@ class TemporalTransformerBlock(nn.Module):
 
         self.ff = FeedForward(dim, dropout=dropout, activation_fn=activation_fn)
         self.ff_norm = nn.LayerNorm(dim)
-
-
+ 
     def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None, video_length=None):
         for attention_block, norm in zip(self.attention_blocks, self.norms):
             norm_hidden_states = norm(hidden_states)

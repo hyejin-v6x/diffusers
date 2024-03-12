@@ -40,6 +40,32 @@ from .upsampling import (  # noqa
     upfirdn2d_native,
     upsample_2d,
 )
+from einops import rearrange
+
+
+class InflatedConv3d(nn.Conv2d):
+    def forward(self, x):
+        video_length = x.shape[2]
+
+        x = rearrange(x, "b c f h w -> (b f) c h w")
+        x = super().forward(x)
+        x = rearrange(x, "(b f) c h w -> b c f h w", f=video_length)
+
+        return x
+
+
+class InflatedGroupNorm(nn.GroupNorm):
+    def forward(self, x):
+        if(x.dim() == 5):
+            video_length = x.shape[2]
+
+            x = rearrange(x, "b c f h w -> (b f) c h w")
+            x = super().forward(x)
+            x = rearrange(x, "(b f) c h w -> b c f h w", f=video_length)
+
+            return x
+        else:
+            return super().forward(x)
 
 
 class ResnetBlockCondNorm2D(nn.Module):
@@ -273,7 +299,7 @@ class ResnetBlock2D(nn.Module):
         if groups_out is None:
             groups_out = groups
 
-        self.norm1 = torch.nn.GroupNorm(num_groups=groups, num_channels=in_channels, eps=eps, affine=True)
+        self.norm1 = InflatedGroupNorm(num_groups=groups, num_channels=in_channels, eps=eps, affine=True)
 
         self.conv1 = conv_cls(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
 
@@ -287,7 +313,7 @@ class ResnetBlock2D(nn.Module):
         else:
             self.time_emb_proj = None
 
-        self.norm2 = torch.nn.GroupNorm(num_groups=groups_out, num_channels=out_channels, eps=eps, affine=True)
+        self.norm2 = InflatedGroupNorm(num_groups=groups_out, num_channels=out_channels, eps=eps, affine=True)
 
         self.dropout = torch.nn.Dropout(dropout)
         conv_2d_out_channels = conv_2d_out_channels or out_channels
@@ -598,8 +624,8 @@ class TemporalResnetBlock(nn.Module):
         kernel_size = (3, 1, 1)
         padding = [k // 2 for k in kernel_size]
 
-        self.norm1 = torch.nn.GroupNorm(num_groups=32, num_channels=in_channels, eps=eps, affine=True)
-        self.conv1 = nn.Conv3d(
+        self.norm1 = InflatedGroupNorm(num_groups=32, num_channels=in_channels, eps=eps, affine=True)
+        self.conv1 = InflatedConv3d(
             in_channels,
             out_channels,
             kernel_size=kernel_size,
@@ -612,10 +638,10 @@ class TemporalResnetBlock(nn.Module):
         else:
             self.time_emb_proj = None
 
-        self.norm2 = torch.nn.GroupNorm(num_groups=32, num_channels=out_channels, eps=eps, affine=True)
+        self.norm2 = InflatedGroupNorm(num_groups=32, num_channels=out_channels, eps=eps, affine=True)
 
         self.dropout = torch.nn.Dropout(0.0)
-        self.conv2 = nn.Conv3d(
+        self.conv2 = InflatedConv3d(
             out_channels,
             out_channels,
             kernel_size=kernel_size,
@@ -629,7 +655,7 @@ class TemporalResnetBlock(nn.Module):
 
         self.conv_shortcut = None
         if self.use_in_shortcut:
-            self.conv_shortcut = nn.Conv3d(
+            self.conv_shortcut = InflatedConv3d(
                 in_channels,
                 out_channels,
                 kernel_size=1,
