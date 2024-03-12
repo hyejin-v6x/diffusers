@@ -95,7 +95,6 @@ class MotionAdapter(ModelMixin, ConfigMixin):
         motion_max_seq_length: int = 32,
         use_motion_mid_block: bool = True,
         conv_in_channels: Optional[int] = None,
-        use_motion_module=None,
     ):
         """Container to store AnimateDiff Motion Modules
 
@@ -129,39 +128,29 @@ class MotionAdapter(ModelMixin, ConfigMixin):
         for i, channel in enumerate(block_out_channels):
             output_channel = block_out_channels[i]
             down_blocks.append(
-                # MotionModules(
-                #     in_channels=output_channel,
-                #     norm_num_groups=motion_norm_num_groups,
-                #     cross_attention_dim=None,
-                #     activation_fn="geglu",
-                #     attention_bias=False,
-                #     num_attention_heads=motion_num_attention_heads,
-                #     max_seq_length=motion_max_seq_length,
-                #     layers_per_block=motion_layers_per_block,
-                # )
-                get_motion_module(
+                MotionModules(
                     in_channels=output_channel,
-                    motion_module_type=motion_module_type, 
-                    motion_module_kwargs=motion_module_kwargs,
+                    norm_num_groups=motion_norm_num_groups,
+                    cross_attention_dim=None,
+                    activation_fn="geglu",
+                    attention_bias=False,
+                    num_attention_heads=motion_num_attention_heads,
+                    max_seq_length=motion_max_seq_length,
+                    layers_per_block=motion_layers_per_block,
                 )
             )
 
         if use_motion_mid_block:
-            # self.mid_block = MotionModules(
-            #     in_channels=block_out_channels[-1],
-            #     norm_num_groups=motion_norm_num_groups,
-            #     cross_attention_dim=None,
-            #     activation_fn="geglu",
-            #     attention_bias=False,
-            #     num_attention_heads=motion_num_attention_heads,
-            #     layers_per_block=motion_mid_block_layers_per_block,
-            #     max_seq_length=motion_max_seq_length,
-            # )
-            self.mid_block = get_motion_module(
-                    in_channels=block_out_channels[-1],
-                    motion_module_type=motion_module_type, 
-                    motion_module_kwargs=motion_module_kwargs,
-                )
+            self.mid_block = MotionModules(
+                in_channels=block_out_channels[-1],
+                norm_num_groups=motion_norm_num_groups,
+                cross_attention_dim=None,
+                activation_fn="geglu",
+                attention_bias=False,
+                num_attention_heads=motion_num_attention_heads,
+                layers_per_block=motion_mid_block_layers_per_block,
+                max_seq_length=motion_max_seq_length,
+            )
         else:
             self.mid_block = None
 
@@ -170,20 +159,15 @@ class MotionAdapter(ModelMixin, ConfigMixin):
         for i, channel in enumerate(reversed_block_out_channels):
             output_channel = reversed_block_out_channels[i]
             up_blocks.append(
-                # MotionModules(
-                #     in_channels=output_channel,
-                #     norm_num_groups=motion_norm_num_groups,
-                #     cross_attention_dim=None,
-                #     activation_fn="geglu",
-                #     attention_bias=False,
-                #     num_attention_heads=motion_num_attention_heads,
-                #     max_seq_length=motion_max_seq_length,
-                #     layers_per_block=motion_layers_per_block + 1,
-                # )
-                get_motion_module(
+                MotionModules(
                     in_channels=output_channel,
-                    motion_module_type=motion_module_type, 
-                    motion_module_kwargs=motion_module_kwargs,
+                    norm_num_groups=motion_norm_num_groups,
+                    cross_attention_dim=None,
+                    activation_fn="geglu",
+                    attention_bias=False,
+                    num_attention_heads=motion_num_attention_heads,
+                    max_seq_length=motion_max_seq_length,
+                    layers_per_block=motion_layers_per_block + 1,
                 )
             )
 
@@ -192,57 +176,6 @@ class MotionAdapter(ModelMixin, ConfigMixin):
 
     def forward(self, sample):
         pass
-
-    @classmethod
-    def from_pretrained_2d(cls, pretrained_model_path, subfolder=None, torch_dtype=torch.float32, unet_additional_kwargs=None):
-        if subfolder is not None:
-            pretrained_model_path = os.path.join(pretrained_model_path, subfolder)
-        print(f"loaded 3D unet's pretrained weights from {pretrained_model_path} ...")
-
-        config_file = os.path.join(pretrained_model_path, 'config.json')
-        if not os.path.isfile(config_file):
-            raise RuntimeError(f"{config_file} does not exist")
-        with open(config_file, "r") as f:
-            config = json.load(f)
-        config["_class_name"] = cls.__name__
-        config["down_block_types"] = [
-            "CrossAttnDownBlock3D",
-            "CrossAttnDownBlock3D",
-            "CrossAttnDownBlock3D",
-            "DownBlock3D"
-            # "CrossAttnDownBlockMotion",
-            # "CrossAttnDownBlockMotion",
-            # "CrossAttnDownBlockMotion",
-            # "DownBlockMotion"
-        ]
-        config["up_block_types"] = [
-            "UpBlock3D",
-            "CrossAttnUpBlock3D",
-            "CrossAttnUpBlock3D",
-            "CrossAttnUpBlock3D"
-            # "UpBlockMotion",
-            # "CrossAttnUpBlockMotion",
-            # "CrossAttnUpBlockMotion",
-            # "CrossAttnUpBlockMotion"
-        ]
-
-        from diffusers.utils import WEIGHTS_NAME
-        model = cls.from_config(config, **unet_additional_kwargs)
-        model_file = os.path.join(pretrained_model_path, WEIGHTS_NAME)
-        if not os.path.isfile(model_file):
-            raise RuntimeError(f"{model_file} does not exist")
-        state_dict = torch.load(model_file, map_location="cpu")
-
-        m, u = model.load_state_dict(state_dict, strict=False)
-        print(f"### missing keys: {len(m)}; \n### unexpected keys: {len(u)};")
-        
-        params = [p.numel() if "motion_modules." in n else 0 for n, p in model.named_parameters()]
-        print(f"### Motion Module Parameters: {sum(params) / 1e6} M")
-        
-        print("torch.dtype:", torch_dtype)
-        if(torch_dtype == torch.float32):
-            return model
-        return model.half()
 
 
 class UNetMotionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin):
