@@ -20,7 +20,7 @@ import torch
 from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer, CLIPVisionModelWithProjection
 
 from ...image_processor import PipelineImageInput, VaeImageProcessor
-from ...loaders import IPAdapterMixin, LoraLoaderMixin, TextualInversionLoaderMixin
+from ...loaders import IPAdapterMixin, LoraLoaderMixin, TextualInversionLoaderMixin, FromSingleFileMixin
 from ...models import AutoencoderKL, ImageProjection, UNet2DConditionModel, UNetMotionModel
 from ...models.lora import adjust_lora_scale_text_encoder
 from ...models.unets.unet_motion_model import MotionAdapter
@@ -203,7 +203,6 @@ class AnimateDiffVideoToVideoPipeline(DiffusionPipeline, TextualInversionLoaderM
         text_encoder: CLIPTextModel,
         tokenizer: CLIPTokenizer,
         unet: UNet2DConditionModel,
-        motion_adapter: MotionAdapter,
         scheduler: Union[
             DDIMScheduler,
             PNDMScheduler,
@@ -212,6 +211,7 @@ class AnimateDiffVideoToVideoPipeline(DiffusionPipeline, TextualInversionLoaderM
             EulerAncestralDiscreteScheduler,
             DPMSolverMultistepScheduler,
         ],
+        motion_adapter: MotionAdapter = None,
         feature_extractor: CLIPImageProcessor = None,
         image_encoder: CLIPVisionModelWithProjection = None,
     ):

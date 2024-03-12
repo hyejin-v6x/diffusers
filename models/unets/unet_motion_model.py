@@ -85,8 +85,6 @@ class MotionAdapter(ModelMixin, ConfigMixin):
     @register_to_config
     def __init__(
         self,
-        motion_module_type: str, 
-        motion_module_kwargs: dict, 
         block_out_channels: Tuple[int, ...] = (320, 640, 1280, 1280),
         motion_layers_per_block: int = 2,
         motion_mid_block_layers_per_block: int = 1,

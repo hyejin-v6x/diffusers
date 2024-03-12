@@ -15,7 +15,10 @@ from diffusers.models.attention import CrossAttention, FeedForward
 
 from einops import rearrange, repeat
 import math
-
+from ..transformers.transformer_temporal import (
+    TransformerSpatioTemporalModel,
+    TransformerTemporalModel,
+)
 
 def zero_module(module):
     # Zero out the parameters of a module and return it.
@@ -44,7 +47,18 @@ def get_motion_module(
     if motion_module_type == "Vanilla":
         return VanillaTemporalModule(in_channels=in_channels, **motion_module_kwargs,)    
     else:
-        raise ValueError
+        # raise ValueError
+        return TransformerTemporalModel(
+            num_attention_heads=8,
+            in_channels=in_channels,
+            norm_num_groups=32,
+            cross_attention_dim=None,
+            attention_bias=False,
+            activation_fn="geglu",
+            positional_embeddings="sinusoidal",
+            num_positional_embeddings=32,
+            attention_head_dim=in_channels // 8 // 1,
+        )
 
 # unet_config = {
 #         "unet_use_cross_frame_attention": False,

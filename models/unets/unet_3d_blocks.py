@@ -555,7 +555,7 @@ class CrossAttnDownBlock3D(nn.Module):
                     in_channels=out_channels,
                     motion_module_type=motion_module_type, 
                     motion_module_kwargs=motion_module_kwargs,
-                ) if use_motion_module else None
+                )
             )
         self.resnets = nn.ModuleList(resnets)
         self.temp_convs = nn.ModuleList(temp_convs)
@@ -676,7 +676,7 @@ class DownBlock3D(nn.Module):
                     in_channels=in_channels,
                     motion_module_type=motion_module_type, 
                     motion_module_kwargs=motion_module_kwargs,
-                ) if use_motion_module else None
+                )
             )
 
         self.resnets = nn.ModuleList(resnets)
@@ -817,7 +817,7 @@ class CrossAttnUpBlock3D(nn.Module):
                     in_channels=out_channels,
                     motion_module_type=motion_module_type, 
                     motion_module_kwargs=motion_module_kwargs,
-                ) if use_motion_module else None
+                )
             )
         self.resnets = nn.ModuleList(resnets)
         self.temp_convs = nn.ModuleList(temp_convs)
@@ -954,7 +954,7 @@ class UpBlock3D(nn.Module):
                     in_channels=out_channels,
                     motion_module_type=motion_module_type, 
                     motion_module_kwargs=motion_module_kwargs,
-                ) if use_motion_module else None
+                )
             )
 
         self.resnets = nn.ModuleList(resnets)
@@ -1809,7 +1809,7 @@ class UNetMidBlockCrossAttnMotion(nn.Module):
                     in_channels=in_channels,
                     motion_module_type=motion_module_type, 
                     motion_module_kwargs=motion_module_kwargs,
-                ) if use_motion_module else None
+                )
             )
 
         self.attentions = nn.ModuleList(attentions)
