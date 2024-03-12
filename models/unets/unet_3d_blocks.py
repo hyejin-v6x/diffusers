@@ -1324,11 +1324,11 @@ class CrossAttnDownBlockMotion(nn.Module):
                     encoder_attention_mask=encoder_attention_mask,
                     return_dict=False,
                 )[0]
-                # hidden_states = motion_module(
-                #     hidden_states,
-                #     num_frames=num_frames,
-                # )[0]
-                hidden_states = motion_module(hidden_states, temb, encoder_hidden_states=encoder_hidden_states) if motion_module is not None else hidden_states
+                hidden_states = motion_module(
+                    hidden_states,
+                    num_frames=num_frames,
+                )[0]
+                # hidden_states = motion_module(hidden_states, temb, encoder_hidden_states=encoder_hidden_states) if motion_module is not None else hidden_states
 
             # apply additional residuals to the output of the last pair of resnet and attention blocks
             if i == len(blocks) - 1 and additional_residuals is not None:
@@ -1537,11 +1537,11 @@ class CrossAttnUpBlockMotion(nn.Module):
                     encoder_attention_mask=encoder_attention_mask,
                     return_dict=False,
                 )[0]
-                # hidden_states = motion_module(
-                #     hidden_states,
-                #     num_frames=num_frames,
-                # )[0]
-                hidden_states = motion_module(hidden_states, temb, encoder_hidden_states=encoder_hidden_states) if motion_module is not None else hidden_states
+                hidden_states = motion_module(
+                    hidden_states,
+                    num_frames=num_frames,
+                )[0]
+                # hidden_states = motion_module(hidden_states, temb, encoder_hidden_states=encoder_hidden_states) if motion_module is not None else hidden_states
 
 
         if self.upsamplers is not None:
@@ -1874,11 +1874,11 @@ class UNetMidBlockCrossAttnMotion(nn.Module):
                     encoder_attention_mask=encoder_attention_mask,
                     return_dict=False,
                 )[0]
-                # hidden_states = motion_module(
-                #     hidden_states,
-                #     num_frames=num_frames,
-                # )[0]
-                hidden_states = motion_module(hidden_states, temb, encoder_hidden_states=encoder_hidden_states) if motion_module is not None else hidden_states
+                hidden_states = motion_module(
+                    hidden_states,
+                    num_frames=num_frames,
+                )[0]
+                # hidden_states = motion_module(hidden_states, temb, encoder_hidden_states=encoder_hidden_states) if motion_module is not None else hidden_states
                 hidden_states = resnet(hidden_states, temb, scale=lora_scale)
 
         return hidden_states
