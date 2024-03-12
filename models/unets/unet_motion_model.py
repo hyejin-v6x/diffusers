@@ -95,6 +95,7 @@ class MotionAdapter(ModelMixin, ConfigMixin):
         motion_max_seq_length: int = 32,
         use_motion_mid_block: bool = True,
         conv_in_channels: Optional[int] = None,
+        use_motion_module=None,
     ):
         """Container to store AnimateDiff Motion Modules
 
@@ -288,9 +289,11 @@ class UNetMotionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin):
         use_motion_mid_block: int = True,
         encoder_hid_dim: Optional[int] = None,
         encoder_hid_dim_type: Optional[str] = None,
+        use_motion_module=None,
+        motion_module_type=None,
+        motion_module_kwargs=None,
     ):
         super().__init__()
-
         self.sample_size = sample_size
 
         # Check inputs
@@ -362,6 +365,9 @@ class UNetMotionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin):
                 dual_cross_attention=False,
                 temporal_num_attention_heads=motion_num_attention_heads,
                 temporal_max_seq_length=motion_max_seq_length,
+                use_motion_module=use_motion_module,
+                motion_module_type=motion_module_type,
+                motion_module_kwargs=motion_module_kwargs,
             )
             self.down_blocks.append(down_block)
 
@@ -379,6 +385,9 @@ class UNetMotionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin):
                 dual_cross_attention=False,
                 temporal_num_attention_heads=motion_num_attention_heads,
                 temporal_max_seq_length=motion_max_seq_length,
+                use_motion_module=use_motion_module,
+                motion_module_type=motion_module_type,
+                motion_module_kwargs=motion_module_kwargs,
             )
 
         else:
@@ -434,6 +443,9 @@ class UNetMotionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin):
                 use_linear_projection=use_linear_projection,
                 temporal_num_attention_heads=motion_num_attention_heads,
                 temporal_max_seq_length=motion_max_seq_length,
+                use_motion_module=use_motion_module,
+                motion_module_type=motion_module_type,
+                motion_module_kwargs=motion_module_kwargs,
             )
             self.up_blocks.append(up_block)
             prev_output_channel = output_channel
@@ -1013,7 +1025,6 @@ class UNetMotionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin):
 
         from diffusers.utils import WEIGHTS_NAME
         print("config: ",config)
-        print("unet_additional_kwargs: ",unet_additional_kwargs)
         model = cls.from_config(config, **unet_additional_kwargs)
         model_file = os.path.join(pretrained_model_path, WEIGHTS_NAME)
         if not os.path.isfile(model_file):

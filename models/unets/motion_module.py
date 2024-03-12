@@ -38,9 +38,9 @@ else:
 
 def get_motion_module(
     in_channels,
-    motion_module_type: str, #
+    motion_module_type: str, 
     motion_module_kwargs: dict 
-):
+):  
     if motion_module_type == "Vanilla":
         return VanillaTemporalModule(in_channels=in_channels, **motion_module_kwargs,)    
     else:

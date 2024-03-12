@@ -57,14 +57,9 @@ def get_down_block(
     temporal_num_attention_heads: int = 8,
     temporal_max_seq_length: int = 32,
     transformer_layers_per_block: int = 1,
-    unet_use_cross_frame_attention=False,
-    unet_use_temporal_attention=    False,
-    use_motion_module=              True,
-    motion_module_resolutions=      [1,2,4,8],
-    motion_module_mid_block=        False,
-    motion_module_decoder_only=     False,
-    motion_module_type=             "Vanilla",
-    motion_module_kwargs=           {}
+    use_motion_module=None,
+    motion_module_type=None,
+    motion_module_kwargs=None,
 ) -> Union[
     "DownBlock3D",
     "CrossAttnDownBlock3D",
@@ -85,6 +80,9 @@ def get_down_block(
             resnet_groups=resnet_groups,
             downsample_padding=downsample_padding,
             resnet_time_scale_shift=resnet_time_scale_shift,
+            use_motion_module=use_motion_module,
+            motion_module_type=motion_module_type,
+            motion_module_kwargs=motion_module_kwargs,
         )
     elif down_block_type == "CrossAttnDownBlock3D":
         if cross_attention_dim is None:
@@ -106,6 +104,9 @@ def get_down_block(
             only_cross_attention=only_cross_attention,
             upcast_attention=upcast_attention,
             resnet_time_scale_shift=resnet_time_scale_shift,
+            use_motion_module=use_motion_module,
+            motion_module_type=motion_module_type,
+            motion_module_kwargs=motion_module_kwargs,
         )
     if down_block_type == "DownBlockMotion":
         return DownBlockMotion(
@@ -121,14 +122,9 @@ def get_down_block(
             resnet_time_scale_shift=resnet_time_scale_shift,
             temporal_num_attention_heads=temporal_num_attention_heads,
             temporal_max_seq_length=temporal_max_seq_length,
-            unet_use_cross_frame_attention=False,
-            unet_use_temporal_attention=    False,
-            use_motion_module=              True,
-            motion_module_resolutions=      [1,2,4,8],
-            motion_module_mid_block=        False,
-            motion_module_decoder_only=     False,
-            motion_module_type=             "Vanilla",
-            motion_module_kwargs=           {}
+            use_motion_module=use_motion_module,
+            motion_module_type=motion_module_type,
+            motion_module_kwargs=motion_module_kwargs,
         )
     elif down_block_type == "CrossAttnDownBlockMotion":
         if cross_attention_dim is None:
@@ -152,14 +148,9 @@ def get_down_block(
             resnet_time_scale_shift=resnet_time_scale_shift,
             temporal_num_attention_heads=temporal_num_attention_heads,
             temporal_max_seq_length=temporal_max_seq_length,
-            unet_use_cross_frame_attention=False,
-            unet_use_temporal_attention=    False,
-            use_motion_module=              True,
-            motion_module_resolutions=      [1,2,4,8],
-            motion_module_mid_block=        False,
-            motion_module_decoder_only=     False,
-            motion_module_type=             "Vanilla",
-            motion_module_kwargs=           {}
+            use_motion_module=use_motion_module,
+            motion_module_type=motion_module_type,
+            motion_module_kwargs=motion_module_kwargs,
         )
     elif down_block_type == "DownBlockSpatioTemporal":
         # added for SDV
@@ -212,14 +203,9 @@ def get_up_block(
     temporal_max_seq_length: int = 32,
     transformer_layers_per_block: int = 1,
     dropout: float = 0.0,
-    unet_use_cross_frame_attention=False,
-    unet_use_temporal_attention=    False,
-    use_motion_module=              True,
-    motion_module_resolutions=      [1,2,4,8],
-    motion_module_mid_block=        False,
-    motion_module_decoder_only=     False,
-    motion_module_type=             "Vanilla",
-    motion_module_kwargs=           {}
+    use_motion_module=None,
+    motion_module_type=None,
+    motion_module_kwargs=None,
 ) -> Union[
     "UpBlock3D",
     "CrossAttnUpBlock3D",
@@ -241,6 +227,9 @@ def get_up_block(
             resnet_groups=resnet_groups,
             resnet_time_scale_shift=resnet_time_scale_shift,
             resolution_idx=resolution_idx,
+            use_motion_module=use_motion_module,
+            motion_module_type=motion_module_type,
+            motion_module_kwargs=motion_module_kwargs,
         )
     elif up_block_type == "CrossAttnUpBlock3D":
         if cross_attention_dim is None:
@@ -263,6 +252,9 @@ def get_up_block(
             upcast_attention=upcast_attention,
             resnet_time_scale_shift=resnet_time_scale_shift,
             resolution_idx=resolution_idx,
+            use_motion_module=use_motion_module,
+            motion_module_type=motion_module_type,
+            motion_module_kwargs=motion_module_kwargs,
         )
     if up_block_type == "UpBlockMotion":
         return UpBlockMotion(
@@ -279,14 +271,9 @@ def get_up_block(
             resolution_idx=resolution_idx,
             temporal_num_attention_heads=temporal_num_attention_heads,
             temporal_max_seq_length=temporal_max_seq_length,
-            unet_use_cross_frame_attention=False,
-            unet_use_temporal_attention=    False,
-            use_motion_module=              True,
-            motion_module_resolutions=      [1,2,4,8],
-            motion_module_mid_block=        False,
-            motion_module_decoder_only=     False,
-            motion_module_type=             "Vanilla",
-            motion_module_kwargs=           {}
+            use_motion_module=use_motion_module,
+            motion_module_type=motion_module_type,
+            motion_module_kwargs=motion_module_kwargs,
         )
     elif up_block_type == "CrossAttnUpBlockMotion":
         if cross_attention_dim is None:
@@ -311,14 +298,9 @@ def get_up_block(
             resolution_idx=resolution_idx,
             temporal_num_attention_heads=temporal_num_attention_heads,
             temporal_max_seq_length=temporal_max_seq_length,
-            unet_use_cross_frame_attention=False,
-            unet_use_temporal_attention=    False,
-            use_motion_module=              True,
-            motion_module_resolutions=      [1,2,4,8],
-            motion_module_mid_block=        False,
-            motion_module_decoder_only=     False,
-            motion_module_type=             "Vanilla",
-            motion_module_kwargs=           {}
+            use_motion_module=use_motion_module,
+            motion_module_type=motion_module_type,
+            motion_module_kwargs=motion_module_kwargs,
         )
     elif up_block_type == "UpBlockSpatioTemporal":
         # added for SDV
@@ -1051,14 +1033,9 @@ class DownBlockMotion(nn.Module):
         temporal_num_attention_heads: int = 1,
         temporal_cross_attention_dim: Optional[int] = None,
         temporal_max_seq_length: int = 32,
-        unet_use_cross_frame_attention=False,
-        unet_use_temporal_attention=    False,
-        use_motion_module=              True,
-        motion_module_resolutions=      [1,2,4,8],
-        motion_module_mid_block=        False,
-        motion_module_decoder_only=     False,
-        motion_module_type=             "Vanilla",
-        motion_module_kwargs=           {}
+        use_motion_module=None,
+        motion_module_type=None,
+        motion_module_kwargs=None,
     ):
         super().__init__()
         resnets = []
@@ -1198,14 +1175,9 @@ class CrossAttnDownBlockMotion(nn.Module):
         temporal_cross_attention_dim: Optional[int] = None,
         temporal_num_attention_heads: int = 8,
         temporal_max_seq_length: int = 32,
-        unet_use_cross_frame_attention=False,
-        unet_use_temporal_attention=    False,
-        use_motion_module=              True,
-        motion_module_resolutions=      [1,2,4,8],
-        motion_module_mid_block=        False,
-        motion_module_decoder_only=     False,
-        motion_module_type=             "Vanilla",
-        motion_module_kwargs=           {}
+        use_motion_module=None,
+        motion_module_type=None,
+        motion_module_kwargs=None,
     ):
         super().__init__()
         resnets = []
@@ -1400,14 +1372,9 @@ class CrossAttnUpBlockMotion(nn.Module):
         temporal_cross_attention_dim: Optional[int] = None,
         temporal_num_attention_heads: int = 8,
         temporal_max_seq_length: int = 32,
-        unet_use_cross_frame_attention=False,
-        unet_use_temporal_attention=    False,
-        use_motion_module=              True,
-        motion_module_resolutions=      [1,2,4,8],
-        motion_module_mid_block=        False,
-        motion_module_decoder_only=     False,
-        motion_module_type=             "Vanilla",
-        motion_module_kwargs=           {}
+        use_motion_module=None,
+        motion_module_type=None,
+        motion_module_kwargs=None,
     ):
         super().__init__()
         resnets = []
@@ -1602,14 +1569,9 @@ class UpBlockMotion(nn.Module):
         temporal_cross_attention_dim: Optional[int] = None,
         temporal_num_attention_heads: int = 8,
         temporal_max_seq_length: int = 32,
-        unet_use_cross_frame_attention=False,
-        unet_use_temporal_attention=    False,
-        use_motion_module=              True,
-        motion_module_resolutions=      [1,2,4,8],
-        motion_module_mid_block=        False,
-        motion_module_decoder_only=     False,
-        motion_module_type=             "Vanilla",
-        motion_module_kwargs=           {}
+        use_motion_module=None,
+        motion_module_type=None,
+        motion_module_kwargs=None,
     ):
         super().__init__()
         resnets = []
@@ -1760,14 +1722,9 @@ class UNetMidBlockCrossAttnMotion(nn.Module):
         temporal_num_attention_heads: int = 1,
         temporal_cross_attention_dim: Optional[int] = None,
         temporal_max_seq_length: int = 32,
-        unet_use_cross_frame_attention= False,
-        unet_use_temporal_attention=    False,
-        use_motion_module=              True,
-        motion_module_resolutions=      [1,2,4,8],
-        motion_module_mid_block=        False,
-        motion_module_decoder_only=     False,
-        motion_module_type=             "Vanilla",
-        motion_module_kwargs=           {}
+        use_motion_module=None,
+        motion_module_type=None,
+        motion_module_kwargs=None,
     ):
         super().__init__()
 
